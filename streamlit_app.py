@@ -159,6 +159,7 @@ tabs = st.tabs([
     "Cash Reserve",
     "Waterfall",
     "Lender Summary",
+    "📖 Model Overview",
 ])
 
 
@@ -985,3 +986,288 @@ with tabs[9]:
     ]
     for m in mitigants:
         st.markdown(f"- {m}")
+
+
+# =============================================================================
+# TAB 10: MODEL OVERVIEW
+# =============================================================================
+with tabs[10]:
+    st.header("📊 How The Model Works")
+    st.caption("Source: The Cube — Financial Model Overview (Notion) · February 24, 2026")
+
+    st.markdown(
+        """
+        The financial model is a **full-stack Python simulation** covering 8 revenue streams,
+        dynamic labor scaling, tiered COTA event economics, a 9-month Year 1 ramp-up,
+        Monte Carlo simulation (10,000 scenarios), and multi-year projections.
+        It represents the most granular and executable version of The Cube's financial analysis.
+        """
+    )
+
+    st.markdown("---")
+
+    # ── Section 1: Revenue Streams ──────────────────────────────────────────
+    with st.expander("1. Revenue Streams", expanded=True):
+        streams = pd.DataFrame([
+            ("1. Daily Bar Ops",     "Happy hour + prime time (3pm–close weekdays, all-day weekends)",    "~$56K–$90K / mo",      "63.3% after COGS + GRT"),
+            ("2. COTA Parking",      "450 spaces at $25–$80/space across 12 events/yr",                  "Event months only",    "~95%"),
+            ("3. COTA Bar Uplift",   "Incremental bar sales during COTA events",                          "Event months only",    "63.3% (same as bar)"),
+            ("4. Event Rentals",     "Private bookings at $2,500–$4,000 avg",                             "$12,000 (3/mo)",       "85%"),
+            ("5. LED Advertising",   "800 sqft LED wall, 5 contracts @ $500/mo",                          "$2,500",               "90%"),
+            ("6. Food Trucks",       "3 trucks: pad rent ($900) + 12% revenue share",                     "$8,100",               "100% (no kitchen OpEx)"),
+            ("7. Weekday Boosters",  "Tesla partnership, trivia, industry night, food truck combos",       "$9,300",               "63.3% (bar-like)"),
+            ("8. Seasonal Events",   "Super Bowl, March Madness, NYE",                                     "~$47K/yr total",      "63.3% (bar-like)"),
+        ], columns=["Stream", "Description", "Steady-State Monthly", "Margin Profile"])
+        st.dataframe(streams, use_container_width=True, hide_index=True)
+
+    # ── Section 2: Core Assumptions ─────────────────────────────────────────
+    with st.expander("2. Core Assumptions"):
+        col_loan, col_nut = st.columns(2)
+
+        with col_loan:
+            st.subheader("Loan & Debt")
+            loan_df = pd.DataFrame([
+                ("Total SBA 7(a) Loan",      "$1,923,698"),
+                ("Interest Rate",             "9.75%"),
+                ("Term",                      "25 years"),
+                ("Monthly Debt Service",      "$17,142.79"),
+                ("Annual Debt Service",       "$205,713"),
+                ("Post-Construction Value",   "$2,500,000"),
+                ("LTV",                       "77%"),
+            ], columns=["Parameter", "Value"])
+            st.dataframe(loan_df, use_container_width=True, hide_index=True)
+
+        with col_nut:
+            st.subheader('Monthly Fixed Costs ("The Nut")')
+            nut_df = pd.DataFrame([
+                ("Debt Service",         "$17,143"),
+                ("Base Labor (5 staff)", "$14,950"),
+                ("Property Tax",         "$4,500"),
+                ("Insurance",            "$3,000"),
+                ("Maintenance Reserve",  "$2,500"),
+                ("Utilities",            "$2,200"),
+                ("Marketing",            "$1,500"),
+                ("Cable/Sports Packages","$1,500"),
+                ("POS/Tech Subscriptions","$1,000"),
+                ("Miscellaneous",        "$1,000"),
+                ("Licenses/Permits",     "$500"),
+                ("**Total Monthly Nut**","**$49,793**"),
+                ("**Annual Fixed Costs**","**$597,516**"),
+            ], columns=["Line Item", "Monthly Cost"])
+            st.dataframe(nut_df, use_container_width=True, hide_index=True)
+
+        st.info(
+            "**Additional Variable Costs** — Credit card processing: 2.8% on 85% of bar-like revenue (~2.38% effective). "
+            "Shrinkage: 2.5% of beverage COGS (breakage + theft). Dynamic labor scaling: staff increases from 5→10 as daily "
+            "customers grow past 100. COTA incremental costs: $1K–$50K per event depending on tier."
+        )
+
+    # ── Section 3: Year 1 Ramp-Up Model ─────────────────────────────────────
+    with st.expander("3. Year 1 Ramp-Up Model"):
+        st.markdown(
+            "The model applies a **9-month ramp** from 30% to 100% of steady-state capacity, "
+            "reflecting the reality that a new bar in a rural area with no existing foot traffic "
+            "takes time to build awareness."
+        )
+        ramp_df = pd.DataFrame([
+            (1,     "30%",  "~30",  "Grand opening buzz, limited awareness"),
+            (2,     "35%",  "~35",  "Post-opening dip, building regulars"),
+            (3,     "42%",  "~42",  "March Madness helps"),
+            (4,     "50%",  "~50",  "MotoGP month, still early"),
+            (5,     "58%",  "~58",  "Word-of-mouth building"),
+            (6,     "65%",  "~65",  "Summer gap partially offsets growth"),
+            (7,     "72%",  "~72",  "Boosters launch, food trucks settled"),
+            (8,     "80%",  "~80",  "NFL preseason, approaching steady state"),
+            (9,     "90%",  "~90",  "NFL + college football pull"),
+            ("10–12","100%","~100", "✅ Steady state reached"),
+        ], columns=["Month", "Capacity %", "Eff. Daily Customers", "Key Driver"])
+        st.dataframe(ramp_df, use_container_width=True, hide_index=True)
+
+        st.markdown("**Ancillary Stream Year 1 Ramps**")
+        st.markdown(
+            "- **Event Rentals:** Zero bookings months 1–3, growing from 1/mo to 3/mo by month 10. "
+            "Avg booking starts at $2,500 (small events) and grows to $3,500 (corporate) by month 12.\n"
+            "- **LED Advertising:** 1 contract in months 1–2, scaling to 5 contracts by month 10.\n"
+            "- **Food Trucks:** 1 anchor truck months 1–3, growing to 3 by month 11.\n"
+            "- **Weekday Boosters:** Don't launch until month 7, reach full base by month 12."
+        )
+
+    # ── Section 4: Seasonality ───────────────────────────────────────────────
+    with st.expander("4. Seasonality Model"):
+        season_df = pd.DataFrame([
+            ("Jan", "0.75", "Post-holiday lull, NFL playoffs"),
+            ("Feb", "0.60", "🔴 Quietest month (Super Bowl spike but low volume)"),
+            ("Mar", "0.80", "March Madness, F1 season start, MLS"),
+            ("Apr", "0.90", "MLB + NBA/NHL stretch run"),
+            ("May", "0.85", "MotoGP at COTA, NBA/NHL playoffs"),
+            ("Jun", "0.70", "Summer gap begins"),
+            ("Jul", "0.65", "Deep summer gap, MLB carries"),
+            ("Aug", "0.70", "NFL preseason, college football hype"),
+            ("Sep", "0.85", "NFL starts, college football peak"),
+            ("Oct", "1.00", "🟢 PEAK — 'Sports Equinox' + F1 USGP"),
+            ("Nov", "0.95", "NFL + college + NBA/NHL full swing"),
+            ("Dec", "0.80", "Bowl season, holidays slow mid-month"),
+        ], columns=["Month", "Multiplier", "Key Sports Drivers"])
+
+        col_chart, col_table = st.columns([3, 2])
+        with col_chart:
+            season_plot_df = pd.DataFrame({
+                "Month": ["Jan","Feb","Mar","Apr","May","Jun",
+                          "Jul","Aug","Sep","Oct","Nov","Dec"],
+                "Multiplier": [0.75,0.60,0.80,0.90,0.85,0.70,
+                               0.65,0.70,0.85,1.00,0.95,0.80],
+            })
+            fig_season = px.bar(
+                season_plot_df, x="Month", y="Multiplier",
+                color="Multiplier",
+                color_continuous_scale=["#E15759","#F28E2B","#59A14F"],
+                range_color=[0.5, 1.0],
+            )
+            fig_season.add_hline(y=1.0, line_dash="dash", line_color="gray",
+                                  annotation_text="Steady State")
+            fig_season.update_layout(
+                showlegend=False,
+                coloraxis_showscale=False,
+                margin=dict(t=20, b=20),
+                yaxis=dict(title="Seasonality Multiplier", range=[0, 1.15]),
+            )
+            st.plotly_chart(fig_season, use_container_width=True)
+        with col_table:
+            st.dataframe(season_df, use_container_width=True, hide_index=True)
+
+    # ── Section 5: COTA Event Tier Economics ─────────────────────────────────
+    with st.expander("5. COTA Event Tier Economics"):
+        cota_df = pd.DataFrame([
+            ("🔴 F1 USGP",      "$80",  "100%",  3, "$60,000",  "$50,000",  "~$168,000"),
+            ("🟠 MotoGP",       "$55",  "93%",   3, "$27,000",  "$38,000",  "~$96,000"),
+            ("🟠 NASCAR",       "$50",  "80%",   2, "$15,000",  "$30,000",  "~$51,000"),
+            ("🟡 WEC 6 Hours",  "$35",  "70%",   2, "$9,000",   "$18,000",  "~$31,000"),
+            ("🟡 GT/TransAm",   "$25",  "35%",   2, "$4,500",   "$8,000",   "~$12,400"),
+            ("🔵 Concert",      "$30",  "55%",   1, "$3,000",   "$5,000",   "~$10,400"),
+            ("🔵 Festival",     "$30",  "45%",   2, "$2,500",   "$6,000",   "~$14,600"),
+            ("⚪ Track Day",    "$0",   "10%",   1, "$1,500",   "$1,000",   "~$1,500"),
+        ], columns=["Tier / Event", "Parking $/Space", "Lot Occupancy",
+                    "Days", "Bar Uplift", "Inc. Cost", "Est. Gross"])
+        st.dataframe(cota_df, use_container_width=True, hide_index=True)
+        st.caption(
+            "Base case calendar: 12 events/yr — 1×F1, 1×MotoGP, 1×NASCAR, 1×WEC, "
+            "2×GT/TransAm, 4×Concerts, 2×Festivals"
+        )
+
+    # ── Section 6: Danger Zone & Break-Even ──────────────────────────────────
+    with st.expander("6. Danger Zone & Break-Even Thresholds"):
+        be_thr = pd.DataFrame([
+            ("Break-Even (Cash Flow = $0)",         "~$69,972",  "~80",  "1.00x"),
+            ("⚠️ Danger Zone Floor (Lender Min)",   "~$76,744",  "~88",  "1.25x"),
+            ("✅ Comfortable Operations",            "~$99,362",  "~113", "2.09x"),
+        ], columns=["Threshold", "Monthly Revenue", "Daily Customers", "DSCR"])
+        st.dataframe(be_thr, use_container_width=True, hide_index=True)
+        st.info(
+            "**Key insight:** Break-even analysis runs with zero COTA events, zero boosters, and zero seasonal "
+            "events — a pure 'can the bar survive on its own' test. At 100 customers/day with the full revenue "
+            "mix, the base case DSCR is significantly above 1.25x."
+        )
+
+    # ── Section 7: Sensitivity ───────────────────────────────────────────────
+    with st.expander("7. Sensitivity Analysis Summary"):
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            st.markdown("**Customer Count (Strongest Lever)**")
+            st.markdown(
+                "- **60/day:** Revenue drops dramatically, DSCR likely below 1.0x\n"
+                "- **80/day:** Near break-even territory\n"
+                "- **100/day (base):** Healthy DSCR above lender minimum\n"
+                "- **130+/day:** Strong free cash flow, DSCR well above 2.0x"
+            )
+            st.markdown("**COTA Event Mix**")
+            st.markdown(
+                "- **No COTA events:** Business must survive on bar ops alone — tight but possible at 100+ customers/day\n"
+                "- **Big 3 only (F1+MotoGP+NASCAR):** Captures ~65–75% of total COTA revenue\n"
+                "- **Full 12 events (base case):** $372K–$581K annual COTA contribution"
+            )
+        with col_s2:
+            st.markdown("**Average Check Size**")
+            st.markdown(
+                "- Weekday check dropping from $25.71 to $20 significantly compresses margins\n"
+                "- Weekend check is the bigger lever — moving from $36.63 to $45+ creates substantial upside"
+            )
+            st.markdown("**COTA Decline Stress Test**")
+            st.markdown(
+                "- **50% COTA decline:** DSCR remains above lender minimum — the business survives\n"
+                "- **75% COTA decline:** Begins approaching danger zone depending on bar performance\n"
+                "- **100% COTA loss:** Viable only if daily bar customers exceed ~110/day consistently"
+            )
+
+    # ── Section 8: Monte Carlo ───────────────────────────────────────────────
+    with st.expander("8. Monte Carlo Simulation (10,000 Scenarios)"):
+        st.markdown(
+            "The model randomizes **9 variables simultaneously** across 10,000 Year 1 simulations. "
+            "COGS is held constant at 30% per the beverage-only model's tight pour-cost controls."
+        )
+        mc_inputs = pd.DataFrame([
+            ("Daily customers",    "40–200",      "100",       "std 20"),
+            ("Weekday check",      "$18–$35",     "$25.71",    "—"),
+            ("Weekend check",      "$25–$50",     "$36.63",    "—"),
+            ("COTA events/yr",     "8–15",        "12",        "Big 4 fixed, variable concerts/festivals"),
+            ("Booster programs",   "30%–180%",    "100%",      "of base"),
+            ("Seasonal events",    "40%–150%",    "100%",      "of base"),
+            ("Event rentals",      "0–4/mo",      "Y1 ramp",   "± 1 booking"),
+            ("Food trucks",        "1–3 active",  "Y1 ramp",   "± 1 truck"),
+            ("LED advertising",    "$500–$2,500", "Y1 ramp",   "± $300/mo"),
+        ], columns=["Variable", "Range", "Base / Mean", "Notes"])
+        st.dataframe(mc_inputs, use_container_width=True, hide_index=True)
+        st.success(
+            "**Key finding:** The Cube's diversified revenue model and low fixed-cost structure make it "
+            "resilient across a wide range of operating conditions. The primary variable that swings outcomes "
+            "is **daily customer count** — not COTA, not check size, not ancillary streams."
+        )
+
+    # ── Section 9: Scenario Comparison ──────────────────────────────────────
+    with st.expander("9. Scenario Definitions"):
+        sc_def = pd.DataFrame([
+            ("Worst Case",   65,  0,   "None",  "No COTA, slow ramp, no boosters"),
+            ("Stress Test",  80,  5,   "None",  "Reduced COTA (Big 3 + 2 concerts), zero boosters"),
+            ("Conservative", 90,  12,  "50%",   "Modest boosters, full COTA calendar"),
+            ("Base Case",    100, 12,  "100%",  "Full model as designed"),
+            ("Upside",       135, 15,  "150%",  "Strong year, aggressive boosters"),
+        ], columns=["Scenario", "Customers/Day", "COTA Events", "Boosters", "Description"])
+        st.dataframe(sc_def, use_container_width=True, hide_index=True)
+
+    # ── Section 10: Multi-Year Trajectory ───────────────────────────────────
+    with st.expander("10. Multi-Year Trajectory (Years 1–3)"):
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            st.markdown("**Growth Assumptions**")
+            st.markdown(
+                "- Revenue growth: **4%/year** (customer volume + check size)\n"
+                "- Cost inflation: **3%/year** (labor, supplies, utilities)\n"
+                "- Debt service: **Fixed at $17,143/mo** for full 25-year term"
+            )
+        with col_g2:
+            st.markdown("**Cash Reserve Tracker**")
+            st.markdown(
+                "- Opening cash reserve: **$186,000** (contingency + operating runway from loan)\n"
+                "- Months 1–4: Expected cash-negative due to ramp-up\n"
+                "- Critical question: Does the $186K reserve bridge the gap through early cash-burn months?"
+            )
+
+    # ── Section 11: Strategic Takeaways ─────────────────────────────────────
+    with st.expander("11. Strategic Takeaways", expanded=True):
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            st.markdown("**✅ What the Model Confirms**")
+            st.markdown(
+                "1. **Viable at 100 customers/day** with the full revenue mix — DSCR comfortably above lender minimum\n"
+                "2. **COTA events are high-margin bonus revenue**, not the foundation — the bar survives without them\n"
+                "3. **F1 is the singular mega-event** — 30–40% of all COTA revenue alone\n"
+                "4. **Beverage-only model is the moat** — $0 kitchen OpEx keeps break-even achievable at modest traffic\n"
+                "5. **Diversification works** — 8 independent revenue streams reduce single-point-of-failure risk"
+            )
+        with col_t2:
+            st.markdown("**⚠️ What the Model Flags**")
+            st.markdown(
+                "1. **Year 1 Months 1–6 will be cash-negative** — the $186K reserve must bridge this gap\n"
+                "2. **The Nut at $49,793 sets a high break-even bar** — ~$78,660/mo in revenue needed\n"
+                "3. **Booster programs are unproven** — delayed to Month 7 and ramped gradually, compressing Year 1\n"
+                "4. **February is the danger month** — 0.60 seasonality multiplier + no COTA events = lowest revenue month"
+            )

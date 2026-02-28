@@ -146,7 +146,7 @@ def months_to_df(months):
 # MAIN CONTENT — TABS
 # =============================================================================
 st.title("The Cube | Financial Model")
-st.caption("13903 FM 812, Del Valle, TX 78617  •  SBA 7(a) Loan: $1,923,698")
+st.caption("13903 FM 812, Del Valle, TX 78617  •  SBA 7(a) Loan: $1,918,346")
 
 tabs = st.tabs([
     "Dashboard",
@@ -880,8 +880,8 @@ with tabs[9]:
         ("Parking lot (450 spaces)", 85_000),
         ("GC + ops consultant fees", 118_800),
         ("Startup costs (FF&E, LED, POS)", 568_000),
-        ("Contingency + operating runway", 186_000),
-        ("Interest during build + ramp", 170_898),
+        ("Contingency + operating runway", 172_724),
+        ("Interest during build + ramp", 178_822),
     ]
     use_df = pd.DataFrame(uses, columns=["Item", "Amount"])
     use_df["Amount"] = use_df["Amount"].apply(fmt_dollar)
@@ -980,7 +980,7 @@ with tabs[9]:
         "Beverage-only model: $0 kitchen OpEx, 28-30% COGS",
         "4.5 acres with on-site septic = infrastructure moat",
         "Outside COTA PUD = no square-footage caps on liquor",
-        f"${580_000:,} post-construction equity cushion",
+        f"${582_000:,} post-construction equity cushion",
         "800 sqft LED wall = premium ad revenue asset",
         "Weekday booster programs add $12K-$26K/mo incremental",
     ]
@@ -993,7 +993,7 @@ with tabs[9]:
 # =============================================================================
 with tabs[10]:
     st.header("📊 How The Model Works")
-    st.caption("Source: The Cube — Financial Model Overview (Notion) · February 24, 2026")
+    st.caption("Source: The Cube — Financial Model Overview (Notion) · February 27, 2026")
 
     st.markdown(
         """
@@ -1027,11 +1027,11 @@ with tabs[10]:
         with col_loan:
             st.subheader("Loan & Debt")
             loan_df = pd.DataFrame([
-                ("Total SBA 7(a) Loan",      "$1,923,698"),
+                ("Total SBA 7(a) Loan",      "$1,918,346"),
                 ("Interest Rate",             "9.75%"),
                 ("Term",                      "25 years"),
-                ("Monthly Debt Service",      "$17,142.79"),
-                ("Annual Debt Service",       "$205,713"),
+                ("Monthly Debt Service",      "$17,095.10"),
+                ("Annual Debt Service",       "$205,141"),
                 ("Post-Construction Value",   "$2,500,000"),
                 ("LTV",                       "77%"),
             ], columns=["Parameter", "Value"])
@@ -1040,19 +1040,18 @@ with tabs[10]:
         with col_nut:
             st.subheader('Monthly Fixed Costs ("The Nut")')
             nut_df = pd.DataFrame([
-                ("Debt Service",         "$17,143"),
-                ("Base Labor (5 staff)", "$14,950"),
-                ("Property Tax",         "$4,500"),
+                ("Debt Service",         "$17,095"),
+                ("Base Labor (5 core staff)", "$12,191"),
+                ("Property Tax",         "$4,375"),
                 ("Insurance",            "$3,000"),
-                ("Maintenance Reserve",  "$2,500"),
+                ("Marketing",            "$3,000"),
                 ("Utilities",            "$2,200"),
-                ("Marketing",            "$1,500"),
-                ("Cable/Sports Packages","$1,500"),
-                ("POS/Tech Subscriptions","$1,000"),
-                ("Miscellaneous",        "$1,000"),
+                ("Maintenance Reserve",  "$1,000"),
+                ("Cable/Sports Packages","$500"),
+                ("POS/Tech Subscriptions","$500"),
                 ("Licenses/Permits",     "$500"),
-                ("**Total Monthly Nut**","**$49,793**"),
-                ("**Annual Fixed Costs**","**$597,516**"),
+                ("**Total Monthly Nut**","**$44,361**"),
+                ("**Annual Fixed Costs**","**$532,332**"),
             ], columns=["Line Item", "Monthly Cost"])
             st.dataframe(nut_df, use_container_width=True, hide_index=True)
 
@@ -1157,9 +1156,9 @@ with tabs[10]:
     # ── Section 6: Danger Zone & Break-Even ──────────────────────────────────
     with st.expander("6. Danger Zone & Break-Even Thresholds"):
         be_thr = pd.DataFrame([
-            ("Break-Even (Cash Flow = $0)",         "~$69,972",  "~80",  "1.00x"),
-            ("⚠️ Danger Zone Floor (Lender Min)",   "~$76,744",  "~88",  "1.25x"),
-            ("✅ Comfortable Operations",            "~$99,362",  "~113", "2.09x"),
+            ("Break-Even (Cash Flow = $0)",         "~$68,680",  "~117",  "1.01x"),
+            ("⚠️ Danger Zone Floor (Lender Min)",   "~$77,014",  "~134",  "1.26x"),
+            ("✅ Comfortable Operations",            "~$109,350", "~113", "2.06x"),
         ], columns=["Threshold", "Monthly Revenue", "Daily Customers", "DSCR"])
         st.dataframe(be_thr, use_container_width=True, hide_index=True)
         st.info(
@@ -1241,14 +1240,14 @@ with tabs[10]:
             st.markdown(
                 "- Revenue growth: **4%/year** (customer volume + check size)\n"
                 "- Cost inflation: **3%/year** (labor, supplies, utilities)\n"
-                "- Debt service: **Fixed at $17,143/mo** for full 25-year term"
+                "- Debt service: **Fixed at $17,095/mo** for full 25-year term"
             )
         with col_g2:
             st.markdown("**Cash Reserve Tracker**")
             st.markdown(
-                "- Opening cash reserve: **$186,000** (contingency + operating runway from loan)\n"
+                "- Opening cash reserve: **$172,724** (contingency + operating runway from loan)\n"
                 "- Months 1–4: Expected cash-negative due to ramp-up\n"
-                "- Critical question: Does the $186K reserve bridge the gap through early cash-burn months?"
+                "- Critical question: Does the $173K reserve bridge the gap through early cash-burn months?"
             )
 
     # ── Section 11: Strategic Takeaways ─────────────────────────────────────
@@ -1266,8 +1265,8 @@ with tabs[10]:
         with col_t2:
             st.markdown("**⚠️ What the Model Flags**")
             st.markdown(
-                "1. **Year 1 Months 1–6 will be cash-negative** — the $186K reserve must bridge this gap\n"
-                "2. **The Nut at $49,793 sets a high break-even bar** — ~$78,660/mo in revenue needed\n"
+                "1. **Year 1 Months 1–6 will be cash-negative** — the $173K reserve must bridge this gap\n"
+                "2. **The Nut at $44,361 sets a high break-even bar** — ~$70,081/mo in revenue needed\n"
                 "3. **Booster programs are unproven** — delayed to Month 7 and ramped gradually, compressing Year 1\n"
                 "4. **February is the danger month** — 0.60 seasonality multiplier + no COTA events = lowest revenue month"
             )

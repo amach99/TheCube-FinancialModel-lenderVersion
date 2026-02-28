@@ -3,7 +3,7 @@
 The Cube | Del Valle Sports Bar & Event Center
 Interactive Financial Model
 13903 FM 812, Del Valle, TX 78617
-Capital Raise: $1,923,698 (SBA 7(a))
+Capital Raise: $1,918,346.10 (SBA 7(a))
 
 Built from Notion feasibility docs (Feb 2026).
 """
@@ -16,37 +16,36 @@ import math
 # =============================================================================
 
 # --- Loan & Debt ---
-TOTAL_LOAN = 1_923_698
+TOTAL_LOAN = 1_918_346
 INTEREST_RATE = 0.0975
 LOAN_TERM_YEARS = 25
-MONTHLY_DEBT_SERVICE = 17_142.79
-ANNUAL_DEBT_SERVICE = 205_713
+MONTHLY_DEBT_SERVICE = 17_095.10
+ANNUAL_DEBT_SERVICE = 205_141
 POST_CONSTRUCTION_VALUE = 2_500_000
 LTV = 0.77
 
 # --- Fixed Monthly Costs ("The Nut") ---
 # Updated breakdown from Feb 2026 Expense Projection Formula
 FIXED_COSTS = {
-    "debt_service": 17_143,
-    "base_labor_5_staff": 14_950,   # 5 staff @ avg ~$2,990/mo (scales with volume)
+    "debt_service": 17_095,
+    "base_labor_5_staff": 12_191,   # 5 core staff (1 GM, 1 bartender, 3 servers) + 15% payroll buffer
     "insurance": 3_000,
     "utilities": 2_200,             # rural location, LED-efficient
-    "marketing": 1_500,
-    "cable_sports_packages": 1_500,
-    "pos_tech_subscriptions": 1_000,
+    "marketing": 3_000,             # local community focus
+    "cable_sports_packages": 500,   # NFL Sunday Ticket, ESPN+, UFC PPV
+    "pos_tech_subscriptions": 500,
     "licenses_permits": 500,
-    "maintenance_reserve": 2_500,   # 4.5-acre property
-    "property_tax": 4_500,          # Travis County ~2.1% on $2.5M value = ~$52.5K/yr
-    "miscellaneous": 1_000,
+    "maintenance_reserve": 1_000,   # maintenance and cleaning supplies
+    "property_tax": 4_375,          # Travis County ~2.1% on $2.5M value = ~$52.5K/yr
 }
-MONTHLY_NUT = sum(FIXED_COSTS.values())  # ~$49,793
+MONTHLY_NUT = sum(FIXED_COSTS.values())  # ~$44,361 (Notion target: $44,362)
 
 # --- Scaled Labor Model ---
-# Base: 5 staff at $14,950/mo handles up to ~100 customers/day
-# Add staff as volume grows. Each additional staff member ~$2,990/mo
+# Base: 5 core staff at $12,191/mo (1 GM, 1 bartender, 3 servers + 15% payroll buffer)
+# Add staff as volume grows. Each additional staff member ~$2,438/mo
 LABOR_BASE_STAFF = 5
-LABOR_BASE_COST = 14_950             # 5 staff monthly
-LABOR_COST_PER_STAFF = 2_990         # avg per additional staff member
+LABOR_BASE_COST = 12_191             # 5 core staff monthly (per Notion Feb 27 update)
+LABOR_COST_PER_STAFF = 2_438         # avg per additional staff member
 LABOR_SCALE_THRESHOLDS = [
     # (daily_customers_threshold, total_staff_needed)
     (0,   5),    # 0-100 customers/day: 5 staff (base)
@@ -421,7 +420,7 @@ ANNUAL_GROWTH_RATE = 0.04   # 4% year-over-year growth (customers + check)
 ANNUAL_COST_INFLATION = 0.03  # 3% annual cost inflation (labor, supplies, utilities)
 
 # --- Cash Reserve ---
-OPENING_CASH_RESERVE = 186_000  # contingency + operating runway from loan
+OPENING_CASH_RESERVE = 172_724  # contingency + operating runway from loan (per Notion Feb 27 update)
 
 
 # =============================================================================
@@ -1604,6 +1603,9 @@ def print_lender_summary():
     print(f"  {'LTV:':<30} {LTV:>14.0%}")
 
     print(f"\n  USE OF FUNDS")
+    print(f"  {'Construction loan (incl. interest):':<35} ${1_197_592:>12,.0f}")
+    print(f"  {'Operations loan (incl. interest):':<35} ${720_754:>12,.0f}")
+    print(f"  {'TOTAL':<35} ${TOTAL_LOAN:>12,.0f}")
     uses = [
         ("Building construction (5K sqft)", 575_000),
         ("Outdoor area build", 115_000),
@@ -1611,8 +1613,8 @@ def print_lender_summary():
         ("Parking lot (450 spaces)", 85_000),
         ("GC + ops consultant fees", 118_800),
         ("Startup costs (FF&E, LED, POS)", 568_000),
-        ("Contingency + operating runway", 186_000),
-        ("Interest during build + ramp", 170_898),
+        ("Contingency + operating runway", 172_724),
+        ("Interest during build + ramp", 178_822),
     ]
     for label, amt in uses:
         print(f"  {label:<35} ${amt:>12,.0f}")

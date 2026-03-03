@@ -3,7 +3,7 @@
 The Cube | Del Valle Sports Bar & Event Center
 Interactive Financial Model
 13903 FM 812, Del Valle, TX 78617
-Capital Raise: $1,918,346.10 (SBA 7(a))
+Capital Raise: $1,923,698 (SBA 7(a))
 
 Built from Notion feasibility docs (Feb 2026).
 """
@@ -16,36 +16,37 @@ import math
 # =============================================================================
 
 # --- Loan & Debt ---
-TOTAL_LOAN = 1_918_346
+TOTAL_LOAN = 1_923_698
 INTEREST_RATE = 0.0975
 LOAN_TERM_YEARS = 25
-MONTHLY_DEBT_SERVICE = 17_095.10
-ANNUAL_DEBT_SERVICE = 205_141
+MONTHLY_DEBT_SERVICE = 17_142.79
+ANNUAL_DEBT_SERVICE = 205_713
 POST_CONSTRUCTION_VALUE = 2_500_000
 LTV = 0.77
 
 # --- Fixed Monthly Costs ("The Nut") ---
 # Updated breakdown from Feb 2026 Expense Projection Formula
 FIXED_COSTS = {
-    "debt_service": 17_095,
-    "base_labor_5_staff": 12_191,   # 5 core staff (1 GM, 1 bartender, 3 servers) + 15% payroll buffer
+    "debt_service": 17_143,
+    "base_labor_5_staff": 14_950,   # 5 core staff @ avg ~$2,990/mo
+    "property_tax": 4_500,          # Travis County assessment
     "insurance": 3_000,
+    "maintenance_reserve": 2_500,   # 4.5-acre property
     "utilities": 2_200,             # rural location, LED-efficient
-    "marketing": 3_000,             # local community focus
-    "cable_sports_packages": 500,   # NFL Sunday Ticket, ESPN+, UFC PPV
-    "pos_tech_subscriptions": 500,
+    "marketing": 1_500,
+    "cable_sports_packages": 1_500, # NFL Sunday Ticket, ESPN+, UFC PPV
+    "pos_tech_subscriptions": 1_000,
+    "miscellaneous": 1_000,
     "licenses_permits": 500,
-    "maintenance_reserve": 1_000,   # maintenance and cleaning supplies
-    "property_tax": 4_375,          # Travis County ~2.1% on $2.5M value = ~$52.5K/yr
 }
-MONTHLY_NUT = sum(FIXED_COSTS.values())  # ~$44,361 (Notion target: $44,362)
+MONTHLY_NUT = sum(FIXED_COSTS.values())  # $49,793
 
 # --- Scaled Labor Model ---
 # Base: 5 core staff at $12,191/mo (1 GM, 1 bartender, 3 servers + 15% payroll buffer)
 # Add staff as volume grows. Each additional staff member ~$2,438/mo
 LABOR_BASE_STAFF = 5
-LABOR_BASE_COST = 12_191             # 5 core staff monthly (per Notion Feb 27 update)
-LABOR_COST_PER_STAFF = 2_438         # avg per additional staff member
+LABOR_BASE_COST = 14_950             # 5 core staff monthly @ ~$2,990/mo each
+LABOR_COST_PER_STAFF = 2_990         # avg per additional staff member
 LABOR_SCALE_THRESHOLDS = [
     # (daily_customers_threshold, total_staff_needed)
     (0,   5),    # 0-100 customers/day: 5 staff (base)
@@ -420,7 +421,7 @@ ANNUAL_GROWTH_RATE = 0.04   # 4% year-over-year growth (customers + check)
 ANNUAL_COST_INFLATION = 0.03  # 3% annual cost inflation (labor, supplies, utilities)
 
 # --- Cash Reserve ---
-OPENING_CASH_RESERVE = 172_724  # contingency + operating runway from loan (per Notion Feb 27 update)
+OPENING_CASH_RESERVE = 186_000  # contingency + operating runway from loan
 
 
 # =============================================================================
@@ -875,13 +876,25 @@ def print_annual_summary(months, annual, label=""):
     print(f"    COTA Inc. Costs:   ${annual['total_cota_cost']:>11,.0f}")
 
 
-def run_multi_year_projection(base_customers=100, years=3):
+def run_multi_year_projection(base_customers=100, years=3,
+                              base_weekday_check=None,
+                              base_weekend_check=None,
+                              booster_pct=1.0,
+                              seasonal_pct=1.0):
     """
     Run Year 1 through Year N projections.
     Year 1: full ramp-up model with all Y1 constraints.
     Year 2+: steady state with annual growth (customers, checks) and cost inflation.
     Returns list of (year, months, annual) tuples.
+
+    base_weekday_check: starting weekday check (default AVG_CHECK_WEEKDAY)
+    base_weekend_check: starting weekend check (default AVG_CHECK_WEEKEND)
+    booster_pct: booster program effectiveness multiplier
+    seasonal_pct: seasonal event strength multiplier
     """
+    _base_wk = base_weekday_check if base_weekday_check is not None else AVG_CHECK_WEEKDAY
+    _base_we = base_weekend_check if base_weekend_check is not None else AVG_CHECK_WEEKEND
+
     all_years = []
 
     for yr in range(1, years + 1):
@@ -889,12 +902,13 @@ def run_multi_year_projection(base_customers=100, years=3):
         cost_mult = (1 + ANNUAL_COST_INFLATION) ** (yr - 1)
 
         custs = int(base_customers * growth)
-        wk_check = AVG_CHECK_WEEKDAY * growth
-        we_check = AVG_CHECK_WEEKEND * growth
+        wk_check = _base_wk * growth
+        we_check = _base_we * growth
 
         months, annual = run_annual_projection(
             custs, year=yr,
             weekday_check=wk_check, weekend_check=we_check,
+            booster_pct=booster_pct, seasonal_pct=seasonal_pct,
         )
 
         # Adjust fixed costs for inflation in Year 2+ (labor, insurance, etc.)
@@ -1267,26 +1281,38 @@ def run_breakeven_analysis():
 # SECTION 6: MONTE CARLO SIMULATION
 # =============================================================================
 
-def run_monte_carlo(n_simulations=10_000, seed=42):
+def run_monte_carlo(n_simulations=10_000, seed=42,
+                    base_customers=100,
+                    base_weekday_check=None,
+                    base_weekend_check=None,
+                    base_booster_pct=1.0,
+                    base_seasonal_pct=1.0):
     """
     Run n randomized annual scenarios varying key inputs within realistic ranges.
     Randomizes: daily customers, check sizes, COTA event mix, booster effectiveness,
     seasonal event performance, event rental bookings, food truck occupancy,
     and LED ad fill rate. COGS is held constant (30%) per user request.
     Reports probability distribution of DSCR, revenue, and cash flow.
+
+    base_customers: mean of customer count gaussian (default 100)
+    base_weekday_check: mean of weekday check gaussian (default AVG_CHECK_WEEKDAY)
+    base_weekend_check: mean of weekend check gaussian (default AVG_CHECK_WEEKEND)
     """
+    _base_wk = base_weekday_check if base_weekday_check is not None else AVG_CHECK_WEEKDAY
+    _base_we = base_weekend_check if base_weekend_check is not None else AVG_CHECK_WEEKEND
+
     random.seed(seed)
     results = []
 
     for _ in range(n_simulations):
         # --- 1. Core bar operations ---
-        daily_custs = random.gauss(100, 20)       # mean 100, std 20
+        daily_custs = random.gauss(base_customers, 20)  # mean = sidebar value, std 20
         daily_custs = max(40, min(200, daily_custs))
 
-        wk_check = random.gauss(25.71, 3)          # $25.71 +/- $3
+        wk_check = random.gauss(_base_wk, 3)            # mean = sidebar value +/- $3
         wk_check = max(18, min(35, wk_check))
 
-        we_check = random.gauss(36.63, 5)          # $36.63 +/- $5
+        we_check = random.gauss(_base_we, 5)            # mean = sidebar value +/- $5
         we_check = max(25, min(50, we_check))
 
         # --- 2. COTA event mix ---
@@ -1310,12 +1336,13 @@ def run_monte_carlo(n_simulations=10_000, seed=42):
             override[month].append(tier_key)
 
         # --- 3. Booster program effectiveness ---
-        # 0.5 = half of base projections, 1.0 = base, 1.5 = 50% above
-        booster_pct = random.gauss(1.0, 0.25)
+        # mean = sidebar value, std 0.25 to explore uncertainty around that baseline
+        booster_pct = random.gauss(base_booster_pct, 0.25)
         booster_pct = max(0.3, min(1.8, booster_pct))
 
         # --- 4. Seasonal event performance ---
-        seasonal_pct = random.gauss(1.0, 0.2)
+        # mean = sidebar value, std 0.2 to explore uncertainty around that baseline
+        seasonal_pct = random.gauss(base_seasonal_pct, 0.2)
         seasonal_pct = max(0.4, min(1.5, seasonal_pct))
 
         # --- 5. Run the projection with randomized inputs ---
@@ -1613,8 +1640,8 @@ def print_lender_summary():
         ("Parking lot (450 spaces)", 85_000),
         ("GC + ops consultant fees", 118_800),
         ("Startup costs (FF&E, LED, POS)", 568_000),
-        ("Contingency + operating runway", 172_724),
-        ("Interest during build + ramp", 178_822),
+        ("Contingency + operating runway", 186_000),
+        ("Interest during build + ramp", 170_898),
     ]
     for label, amt in uses:
         print(f"  {label:<35} ${amt:>12,.0f}")

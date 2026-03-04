@@ -809,19 +809,29 @@ with tabs[8]:
     cc = annual["total_cc_processing"]
     shrinkage = annual["total_shrinkage"]
     cota_cost = annual["total_cota_cost"]
+    # Margin costs for non-bar revenue streams (previously missing, causing waterfall
+    # FCF to be overstated vs Dashboard/Annual Projection tabs)
+    parking_ops = annual["total_cota_parking"] * 0.05   # 95% margin -> 5% ops cost
+    rental_overhead = annual["total_rentals"] * (1 - model.EVENT_RENTAL_MARGIN)  # 15%
+    led_overhead = annual["total_led"] * (1 - model.LED_MARGIN)                  # 10%
     labor = annual["total_labor"]
     fixed_ex = (model.MONTHLY_NUT - model.FIXED_COSTS["base_labor_5_staff"]
                 - model.FIXED_COSTS["debt_service"]) * 12
     debt = model.ANNUAL_DEBT_SERVICE
-    free_cf = gross - cogs - grt - cc - shrinkage - cota_cost - labor - fixed_ex - debt
+    free_cf = (gross - cogs - grt - cc - shrinkage - cota_cost
+               - parking_ops - rental_overhead - led_overhead
+               - labor - fixed_ex - debt)
 
     # Plotly waterfall
     labels = ["Gross Revenue", "COGS (30%)", "TX GRT (6.7%)", "CC Processing",
-              "Shrinkage", "COTA Costs", "Labor", "Fixed Costs", "Debt Service",
+              "Shrinkage", "COTA Inc. Costs", "Parking Ops (5%)",
+              "Rental Overhead (15%)", "LED Costs (10%)",
+              "Labor", "Fixed Costs", "Debt Service",
               "Free Cash Flow"]
     values = [gross, -cogs, -grt, -cc, -shrinkage, -cota_cost,
+              -parking_ops, -rental_overhead, -led_overhead,
               -labor, -fixed_ex, -debt, 0]  # last is total
-    measures = ["absolute"] + ["relative"] * 8 + ["total"]
+    measures = ["absolute"] + ["relative"] * 12 + ["total"]
 
     fig_wf = go.Figure(go.Waterfall(
         x=labels, y=values, measure=measures,
@@ -841,7 +851,9 @@ with tabs[8]:
 
     # Margin analysis
     st.subheader("Margin Analysis")
-    total_costs = cogs + grt + cc + shrinkage + cota_cost + labor + fixed_ex + debt
+    total_costs = (cogs + grt + cc + shrinkage + cota_cost
+                   + parking_ops + rental_overhead + led_overhead
+                   + labor + fixed_ex + debt)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Gross Margin", f"{(1 - model.COGS_RATE - model.GRT_RATE) * 100:.1f}%")
     c2.metric("Total Cost Ratio", f"{total_costs / gross * 100:.1f}%")
@@ -857,6 +869,9 @@ with tabs[8]:
         {"Layer": "CC Processing", "Amount": f"({fmt_dollar(cc)})", "% of Revenue": fmt_pct(cc/gross*100)},
         {"Layer": "Shrinkage", "Amount": f"({fmt_dollar(shrinkage)})", "% of Revenue": fmt_pct(shrinkage/gross*100)},
         {"Layer": "COTA Inc. Costs", "Amount": f"({fmt_dollar(cota_cost)})", "% of Revenue": fmt_pct(cota_cost/gross*100)},
+        {"Layer": "Parking Ops (5%)", "Amount": f"({fmt_dollar(parking_ops)})", "% of Revenue": fmt_pct(parking_ops/gross*100)},
+        {"Layer": "Rental Overhead (15%)", "Amount": f"({fmt_dollar(rental_overhead)})", "% of Revenue": fmt_pct(rental_overhead/gross*100)},
+        {"Layer": "LED Costs (10%)", "Amount": f"({fmt_dollar(led_overhead)})", "% of Revenue": fmt_pct(led_overhead/gross*100)},
         {"Layer": "Labor (scaled)", "Amount": f"({fmt_dollar(labor)})", "% of Revenue": fmt_pct(labor/gross*100)},
         {"Layer": "Fixed Costs", "Amount": f"({fmt_dollar(fixed_ex)})", "% of Revenue": fmt_pct(fixed_ex/gross*100)},
         {"Layer": "Debt Service", "Amount": f"({fmt_dollar(debt)})", "% of Revenue": fmt_pct(debt/gross*100)},
